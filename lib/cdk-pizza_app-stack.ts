@@ -1,16 +1,24 @@
 import * as cdk from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
-// import * as sqs from 'aws-cdk-lib/aws-sqs';
+import { Function, Runtime, Code } from 'aws-cdk-lib/aws-lambda';
+import * as apigateway from 'aws-cdk-lib/aws-apigateway';
+
 
 export class CdkPizzaAppStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
-    // The code that defines your stack goes here
+    const newOrderFunction = new Function(this, 'NewOrderFuncion', {
+      runtime: Runtime.NODEJS_22_X,
+      handler: 'handler.newOrder',
+      code: Code.fromAsset('lib/functions'),
+});
 
-    // example resource
-    // const queue = new sqs.Queue(this, 'CdkPizzaAppQueue', {
-    //   visibilityTimeout: cdk.Duration.seconds(300)
-    // });
+    const api = new apigateway.RestApi(this, 'PizzeriaApi', {
+      restApiName: 'Pizzeria CDK Service',
+      });
+
+    const orderResource = api.root.addResource('order');
+    orderResource.addMethod('POST', new apigateway.LambdaIntegration(newOrderFunction));  
   }
 }
