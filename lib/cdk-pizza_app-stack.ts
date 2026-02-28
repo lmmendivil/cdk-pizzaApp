@@ -42,7 +42,14 @@ export class CdkPizzaAppStack extends cdk.Stack {
       runtime: Runtime.NODEJS_22_X,
       handler: 'handler.getOrder',
       code: Code.fromAsset('lib/functions'),
+      environment: {
+        ORDER_TABLE_NAME: ordersTable.tableName,
+      }
 });
+
+    ordersTable.grantReadData(getOrderFunction);
+
+    
 
     const prepOrderFunction = new Function(this, 'PrepOrderFuncion', {
       runtime: Runtime.NODEJS_22_X,
