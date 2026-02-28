@@ -4,6 +4,7 @@ import { Function, Runtime, Code } from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+import { send } from 'process';
 
 
 export class CdkPizzaAppStack extends cdk.Stack {
@@ -12,6 +13,8 @@ export class CdkPizzaAppStack extends cdk.Stack {
 
 //SQS
     const pendingOrdersQueue = new Queue(this, 'PendingOrdersQueue', {});
+    const sendOrdersQueue = new Queue(this, 'sendOrdersQueue', {});
+
 
 //FUNCTIONS 
     const newOrderFunction = new Function(this, 'NewOrderFuncion', {
@@ -39,10 +42,18 @@ export class CdkPizzaAppStack extends cdk.Stack {
     prepOrderFunction.addEventSource(new SqsEventSource(pendingOrdersQueue, {
       batchSize: 1
     }));
-    
-
-
-
+  
+  
+  const sendOrderFunction = new Function(this, 'SendOrderFuncion', {
+      runtime: Runtime.NODEJS_22_X,
+      handler: 'handler.sendOrder',
+      code: Code.fromAsset('lib/functions'),
+      environment: {
+        SEND_ORDERS_QUEUE_URL: sendOrdersQueue.queueUrl,
+      }
+});
+      
+    sendOrdersQueue.grantSendMessages(sendOrderFunction);
 
 
 //API GATEWAY
