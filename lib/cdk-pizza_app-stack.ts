@@ -30,10 +30,13 @@ export class CdkPizzaAppStack extends cdk.Stack {
       handler: 'handler.newOrder',
       code: Code.fromAsset('lib/functions'),
       environment: {
-        PENDING_ORDERS_QUEUE_URL: pendingOrdersQueue.queueUrl,}  
+        PENDING_ORDERS_QUEUE_URL: pendingOrdersQueue.queueUrl,
+        ORDER_TABLE_NAME: ordersTable.tableName,
+      }  
            
 });
     pendingOrdersQueue.grantSendMessages(newOrderFunction);
+    ordersTable.grantWriteData(newOrderFunction);
 
     const getOrderFunction = new Function(this, 'GetOrderFuncion', {
       runtime: Runtime.NODEJS_22_X,
