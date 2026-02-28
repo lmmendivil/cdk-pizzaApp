@@ -4,7 +4,7 @@ import { Function, Runtime, Code } from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
 import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
-import { send } from 'process';
+import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
 
 
 export class CdkPizzaAppStack extends cdk.Stack {
@@ -14,6 +14,14 @@ export class CdkPizzaAppStack extends cdk.Stack {
 //SQS
     const pendingOrdersQueue = new Queue(this, 'PendingOrdersQueue', {});
     const sendOrdersQueue = new Queue(this, 'sendOrdersQueue', {});
+
+//DYNAMODB
+    const ordersTable = new Table(this, 'OrdersTable',{
+        partitionKey: { name: 'orderId', type: AttributeType.STRING },
+        billingMode:BillingMode.PAY_PER_REQUEST, 
+      })
+    
+      
 
 
 //FUNCTIONS 
