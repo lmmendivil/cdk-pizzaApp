@@ -1,10 +1,11 @@
 import * as cdk from 'aws-cdk-lib/core';
 import { Construct } from 'constructs';
-import { Function, Runtime, Code } from 'aws-cdk-lib/aws-lambda';
+import { Function, Runtime, Code, StartingPosition, FilterCriteria } from 'aws-cdk-lib/aws-lambda';
 import * as apigateway from 'aws-cdk-lib/aws-apigateway';
 import { Queue } from 'aws-cdk-lib/aws-sqs';
-import { SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
-import { AttributeType, BillingMode, Table } from 'aws-cdk-lib/aws-dynamodb';
+import { DynamoEventSource, SqsEventSource } from 'aws-cdk-lib/aws-lambda-event-sources';
+import { AttributeType, BillingMode, Table, StreamViewType } from 'aws-cdk-lib/aws-dynamodb';
+import { RemovalPolicy } from 'aws-cdk-lib';
 
 
 export class CdkPizzaAppStack extends cdk.Stack {
@@ -19,6 +20,8 @@ export class CdkPizzaAppStack extends cdk.Stack {
     const ordersTable = new Table(this, 'OrdersTable',{
         partitionKey: { name: 'orderId', type: AttributeType.STRING },
         billingMode:BillingMode.PAY_PER_REQUEST, 
+        stream: StreamViewType.NEW_AND_OLD_IMAGES,
+        removalPolicy: RemovalPolicy.DESTROY
       })
     
       
@@ -47,6 +50,7 @@ export class CdkPizzaAppStack extends cdk.Stack {
       environment: {
         ORDER_TABLE_NAME: ordersTable.tableName,
       }
+
 });
 
     ordersTable.grantReadData(getOrderFunction);
@@ -78,8 +82,19 @@ export class CdkPizzaAppStack extends cdk.Stack {
         SEND_ORDERS_QUEUE_URL: sendOrdersQueue.queueUrl,
       }
 });
-      
+    
+    sendOrderFunction.addEventSource(new DynamoEventSource(ordersTable, {
+      startingPosition: StartingPosition.LATEST,
+      batchSize: 1,
+      filters: [
+        FilterCriteria.filter({
+          eventName: ['MODIFY']
+        })
+      ]
+  }));
+
     sendOrdersQueue.grantSendMessages(sendOrderFunction);
+    ordersTable.grantStreamRead(sendOrderFunction);
 
 
 //API GATEWAY
