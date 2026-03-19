@@ -14,7 +14,7 @@ export class CdkPizzaAppStack extends cdk.Stack {
 
 //SQS
     const pendingOrdersQueue = new Queue(this, 'PendingOrdersQueue', {});
-    const sendOrdersQueue = new Queue(this, 'sendOrdersQueue', {});
+    const sendOrdersQueue = new Queue(this, 'SendOrdersQueue', {});
 
 //DYNAMODB
     const ordersTable = new Table(this, 'OrdersTable',{
